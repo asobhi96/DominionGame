@@ -1,6 +1,7 @@
 README
 
 This package includes:
+
     CardDefinitions/ #Class files for each card
 
     Game.py #Class file for creating game instance

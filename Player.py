@@ -40,6 +40,7 @@ class Player:
         return card
 
     def select_card_from_hand(self,card_type=None,max_cost=100):
+        self.show_card_names(self.hand)
         card_name = input("Enter the name of the card you want to select").lower()
         card = self.find_card_from_hand(card_name) #could be simpler maybe, do a list lookup
         while card is None or card.cost > max_cost or (card_type and card_type not in card.card_types):
@@ -97,6 +98,10 @@ class Player:
         print("card not in hand")
         return None
 
+    def show_card_names(self,card_list):
+        for card in card_list:
+            print(card.card_name)
+
     def gain_card(self,card_name):
         self.supply.decrease_stock(card_name,1)
         new_card = self.supply.create_card_from_supply(card_name)
@@ -105,9 +110,9 @@ class Player:
     def prompt_reaction(self):
         for card in self.hand:
             if 'reaction' in card.card_types:
-                prompt = input("Enter yes to react with card: {}".format(card.card_name))
+                prompt = input("Enter yes to react with card: {}\n".format(card.card_name))
                 if prompt == 'yes':
-                    card.react()
+                    card.react(self)
 
     def reveal(self,card_name):
         card = self.find_card_from_hand(card_name)
