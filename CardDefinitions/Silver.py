@@ -6,3 +6,4 @@ class Silver(Card):
         self.card_types = ['treasure']
         self.cost = 3
         self.value = 2
+        self.text = "$2"

@@ -6,3 +6,4 @@ class Province(Card):
         self.card_types = ['victory']
         self.cost = 8
         self.victory_points = 6
+        self.text = "6 VP"

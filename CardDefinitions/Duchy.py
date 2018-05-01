@@ -6,3 +6,4 @@ class Duchy(Card):
         self.card_types = ['victory']
         self.cost = 5
         self.victory_points = 3
+        self.text = "3 VP"

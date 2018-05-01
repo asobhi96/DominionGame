@@ -6,3 +6,4 @@ class Copper(Card):
         self.card_types = ['treasure']
         self.cost = 0
         self.value = 1
+        self.text = "$1"

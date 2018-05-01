@@ -6,3 +6,4 @@ class Curse(Card):
         self.card_types = ['curse']
         self.cost = 0
         self.value = -1
+        self.text = "-1 VP"
