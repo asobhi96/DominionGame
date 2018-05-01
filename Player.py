@@ -73,8 +73,12 @@ class Player:
             potential_purchases = self.supply.get_potential_purchases(max_cost=total_money)
             self.show_cards(potential_purchases)
             card = self.select_card_from_supply(max_cost=total_money)
-            self.buy(card)
-            return True
+            print(card)
+            confirmation = input("Enter 'yes' to purhcase this card\n")
+            if confirmation == 'yes':
+                self.buy(card)
+                return True
+            return False
         else:
             return False
     def buy(self,card_to_buy):
@@ -89,7 +93,7 @@ class Player:
     def show_hand(self,card_type=None,max_cost=100):
         for card in self.hand:
             if (not card_type or card_type in card.card_types) and card.cost <= max_cost:
-                print(card)
+                print(card.card_name)
 
     def find_card_from_hand(self,card_name):
         for card in self.hand:

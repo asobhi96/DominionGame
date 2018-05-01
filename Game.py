@@ -1,3 +1,4 @@
+import os
 import Supply
 import Player
 class Game():
@@ -23,21 +24,20 @@ class Game():
         while action != "end":
             self.prompt()
             action = input("choose an action\n").lower()
+            os.system('cls' if os.name == 'nt' else 'clear')
             if action == 'stats':
                 print(player)
             elif action == 'hand':
                 player.show_hand()
             elif action == 'supply':
                 self.supply.show_supply()
-            elif action == 'money':
-                print("Player has ${}\n".format(player.calculate_money()))
             elif action == 'play':
                 player.choose_and_play_action()
             elif action == 'buy':
                 if player.buy_card():
                     print("Card sucessfully purhcased")
                 else:
-                    print("Out of buys")
+                    print("Purchased canceled or player out of buys")
             elif action == "end":
                 player.clean_up()
                 self.current_player = (self.current_player + 1) % len(self.players)
@@ -63,14 +63,13 @@ class Game():
         return [opponent for opponent in self.players if opponent != player]
 
     def prompt(self):
-        print('\n'*3)
+        print('\n')
         print("Enter 'hand' to view your hand")
         print("Enter 'stats' to view your current stats")
         print("Enter 'supply' to view the supply")
         print("Enter 'examine' to examine a card from the supply")
-        print("Enter 'money' to see how much $ you have")
         print("Enter 'play' to play a card")
         print("Enter 'buy' to purhcase a card'")
         print("Enter 'end' to end your turn")
         print("Enter 'exit' to exit this game")
-        print('\n'*3)
+        print('\n')

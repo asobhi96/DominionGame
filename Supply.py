@@ -12,7 +12,7 @@ class Supply():
 
     def decrease_stock(self,card_name,number=1):
         if self.card_availible(card_name):
-            self.card_supply_dict[card_name] -= number
+            self.card_supply_dict[card_name.lower()] -= number
         else:
             print("Card out of stock")
 
@@ -27,16 +27,16 @@ class Supply():
             return None
 
     def card_availible(self,card_name):
-        if self.card_supply_dict[card_name] > 0:
+        if self.card_supply_dict[card_name.lower()] > 0:
             return True
         return False
 
     def show_supply(self):
         print("Current Supply:\n")
-        print("Name\tCost\tSupply")
+        print("{:10}{:4}{:4}\n".format("Name","Cost","Supply"))
         for card,supply in self.card_supply_dict.items():
             if self.card_availible(card):
-                print("{} {} {}".format(card.capitalize(),self.card_cost_dict[card],supply))
+                print("{:10}{:4}{:4}".format(card.capitalize(),self.card_cost_dict[card],supply))
 
     def get_potential_purchases(self,max_cost):
         result = []
