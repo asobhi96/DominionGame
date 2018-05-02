@@ -91,9 +91,7 @@ class Player:
             print(card)
 
     def show_hand(self,card_type=None,max_cost=100):
-        for card in self.hand:
-            if (not card_type or card_type in card.card_types) and card.cost <= max_cost:
-                print(card.card_name)
+        return '\n'.join([card.card_name for card in self.hand if (not card_type or card_type in card.card_types) and card.cost <= max_cost])
 
     def find_card_from_hand(self,card_name):
         for card in self.hand:

@@ -32,18 +32,17 @@ class Supply():
         return False
 
     def show_supply(self):
-        print("Current Supply:\n")
-        print("{:10}{:4}{:4}\n".format("Name","Cost","Supply"))
-        for card,supply in self.card_supply_dict.items():
-            if self.card_availible(card):
-                print("{:10}{:4}{:4}".format(card.capitalize(),self.card_cost_dict[card],supply))
+        header = ["Current Supply:"] + ["{:10}{:4}{:4}".format("Name","Cost","Supply")]
+        supply_info = ["{:10}{:4}{:4}".format(card.capitalize(),self.card_cost_dict[card],supply) for card,supply in self.card_supply_dict.items() if self.card_availible(card)]
+        supply_string = '\n'.join(header+supply_info)
+        return supply_string
 
     def get_potential_purchases(self,max_cost):
         result = []
         for card,supply in self.card_supply_dict.items():
             if self.card_availible(card) and self.card_cost_dict[card] <= max_cost:
                 result.append(card)
-        return result
+        return "\n".join(result)
 
     def count_empty_piles(self):
         return sum([True for card,supply in self.card_supply_dict.items() if supply == 0])
