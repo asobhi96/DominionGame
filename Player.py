@@ -142,7 +142,12 @@ class Player:
             return False
         self.show_hand(card_type='action')
         card = self.select_card_from_hand(card_type='action')
-        self.play_card(card)
+        print(card)
+        confirmation = input("Enter 'yes' to buy this card\n")
+        if confirmation == 'yes':
+            self.play_card(card)
+            return True
+        return False
 
     def add_to_deck(self,card_name,quantity):
         card = self.supply.create_card_from_supply(card_name)
