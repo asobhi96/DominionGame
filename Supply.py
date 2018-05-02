@@ -37,7 +37,7 @@ class Supply():
         supply_string = '\n'.join(header+supply_info)
         return supply_string
 
-    def get_potential_purchases(self,max_cost):
+    def get_potential_purchases(self,max_cost=100):
         result = []
         for card,supply in self.card_supply_dict.items():
             if self.card_availible(card) and self.card_cost_dict[card] <= max_cost:

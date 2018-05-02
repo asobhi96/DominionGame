@@ -61,7 +61,6 @@ class Player:
         if card.is_playable():
             self.actions -= 1
             self.discard_from_hand(card)
-            print(card.text)
             card.play(self)
             return True
         return False
@@ -87,8 +86,7 @@ class Player:
             self.gain_card(card_to_buy.card_name.lower())
 
     def show_cards(self,card_list):
-        for card in card_list:
-            print(card)
+        return "\n".join([card for card in card_list])
 
     def show_hand(self,card_type=None,max_cost=100):
         return '\n'.join([card.card_name for card in self.hand if (not card_type or card_type in card.card_types) and card.cost <= max_cost])
@@ -97,12 +95,10 @@ class Player:
         for card in self.hand:
             if card == card_name:
                 return card
-        print("card not in hand")
         return None
 
     def show_card_names(self,card_list):
-        for card in card_list:
-            print(card.card_name)
+        return "\n".join([card.card_name for card in card_list])
 
     def gain_card(self,card_name):
         self.supply.decrease_stock(card_name,1)
@@ -119,7 +115,7 @@ class Player:
     def reveal(self,card_name):
         card = self.find_card_from_hand(card_name)
         if card:
-            print("{} reveals {}\n".format(self.name,card.card_name))
+            return "{} reveals {}\n".format(self.name,card.card_name)
 
     def clean_up(self):
         self.discard_entire_hand()
