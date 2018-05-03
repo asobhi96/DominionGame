@@ -1,19 +1,19 @@
 import os
 import socket
-import Supply
-import Player
+import supply
+import player
 from communication import read_message, read_ack, send_message, send_ack
 class GameServer():
     def __init__(self,board,number_of_players):
-        self.supply = Supply.Supply(configure_board=board)
+        self.supply = supply.Supply(configure_board=board)
         self.server_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM) #creates a TCP socket
-        self.client_sockets = []
+        self.player_sockets = []
         self.players = []
         self.current_player = None
         self.current_player_id = 0
         self.current_connection = None
         self.number_of_players = number_of_players
-        self.phase = 'action'
+        self.phase = None
 
     def connect_to_players(self):
         self.server_socket.bind(("0.0.0.0",1025))
@@ -21,9 +21,9 @@ class GameServer():
         for i in range(self.number_of_players):
             conn,addr = self.server_socket.accept()
             print("connection found")
-            self.client_sockets.append(conn)
-            player = Player.Player(name=read_message(connection=conn),id=i,game=self)
-            self.players.append(player)
+            self.player_sockets.append(conn)
+            new_player = player.Player(name=read_message(connection=conn),id=i,game=self,connection=conn)
+            self.players.append(new_player)
 
     def set_up(self):
         self.connect_to_players()
@@ -41,14 +41,16 @@ class GameServer():
         self.current_player,self.current_connection = self.get_player_and_client()
         action = "start"
         while action != "end":
-            action = self.prompt()
+            action = self.prompt_player()
             if action == 'stats':
                 self.stats()
             elif action == 'hand':
                 self.hand()
             elif action == 'supply':
                 self.get_supply()
-            elif action == 'play' and self.phase == 'action':
+            elif action == 'examine':
+                self.examine()
+            elif action == 'play':
                 self.play_action()
             elif action == 'buy':
                 self.buy_card()
@@ -56,13 +58,11 @@ class GameServer():
                 self.end_turn()
             elif action == 'exit':
                 self.exit_game()
-            elif action == 'examine':
-                self.examine()
 
-    def request_card(self,max_cost=100):
-        send_message(self.supply.get_potential_purchases(max_cost=max_cost),self.current_connection)
+    def request_card(self,card_type=None,max_cost=100):
+        send_message(self.supply.get_potential_purchases(card_type=card_type,max_cost=max_cost),self.current_connection)
         requested_card = read_message(self.current_connection)
-        return self.supply.create_card_from_supply(requested_card)
+        return self.supply.get_card(requested_card)
 
 
     def examine(self):
@@ -97,13 +97,13 @@ class GameServer():
         ack = read_ack(self.current_connection)
 
     def play_action(self):
-        if self.current_player.actions < 1 or not self.current_player.action_in_hand():
+        if self.current_player.actions < 1 or not self.current_player.action_in_hand() or self.phase == 'buy':
             send_message("cannot play action cards",self.current_connection)
         else:
             send_ack(self.current_connection)
             send_message(self.current_player.show_hand(card_type='action'),self.current_connection)
             requested_action = read_message(self.current_connection)
-            card = self.supply.create_card_from_supply(requested_action)
+            card = self.supply.get_card(requested_action)
             send_message(str(card),self.current_connection)
             confirmation = read_message(self.current_connection)
             if confirmation == 'yes':
@@ -114,8 +114,8 @@ class GameServer():
     def opponents_of(self,player):
         return [opponent for opponent in self.players if opponent != player]
 
-    def prompt(self):
-        print("Sending menu to player")
+    def prompt_player(self):
+        print("Sending menu to {}\n".format(self.current_player.name))
         send_message("menu",self.current_connection)
         return read_message(self.current_connection)
 
@@ -131,10 +131,10 @@ class GameServer():
         return False
 
     def get_player_and_client(self):
-        return self.players[self.current_player_id],self.client_sockets[self.current_player_id]
+        return self.players[self.current_player_id],self.player_sockets[self.current_player_id]
 
     def exit_game(self):
-        for socket in self.client_sockets:
+        for socket in self.player_sockets:
             socket.close()
         exit()
 
@@ -146,8 +146,8 @@ def main():
     with open("card_config.txt",'r') as f:
         configure = []
         for card in f:
-            name,cost,supply = card.strip().split(',')
-            configure.append(tuple([name,int(cost),int(supply)]))
+            name,supply = card.strip().split(',')
+            configure.append(tuple([name,int(supply)]))
         game = GameServer(board=configure,number_of_players=1)
         game.main_loop()
 

@@ -1,8 +1,6 @@
 import os
 import socket
-import Supply
-import Player
-from communication import read_message, read_ack, send_message, send_ack
+from communication import send_message, send_ack, read_message, read_ack, read_command
 
 class PlayerClient():
     def __init__(self):
@@ -16,14 +14,17 @@ class PlayerClient():
     def play(self):
         while True:
             menu = read_message(self.connection)
-            action = self.choose_action()
-            os.system('cls')
-            self.process_action(action)
+            if menu == 'command_mode':
+                self.process_commands()
+            else:
+                action = self.choose_action()
+                os.system('cls')
+                self.process_action(action)
 
     def choose_action(self):
         self.show_menu()
         action = input("Enter action\n")
-        while action not in ['hand','supply','stats','examine','buy','play','end','exit']:
+        while action not in ['hand','supply','stats','examine','buy','play','end','exit',]:
             action = input("Enter action\n")
         return action
 
@@ -59,6 +60,8 @@ class PlayerClient():
             self.end_turn()
         elif action == 'exit':
             self.exit_game()
+        elif action == 'command_mode':
+            self.process_commands()
 
     def show_hand(self):
         send_message('hand',self.connection)
@@ -78,15 +81,29 @@ class PlayerClient():
         print(stats)
         send_ack(self.connection)
 
+    def choose_valid_card(self,card_list):
+        request = input("Enter the card name\n").lower()
+        while request not in card_list and request.capitalize() not in card_list:
+            request = input("Enter the card name\n")
+        return request
+
+    def send_and_recieve_response(self,message):
+        send_message(message,self.connection)
+        return read_message(self.connection)
+
+    def ask_confirmation(self):
+        confirmation = input("Enter yes to select card\n")
+        if confirmation == 'yes':
+            return True
+        else:
+            return False
+
     def examine_card(self):
         send_message('examine',self.connection)
         supply = read_message(self.connection)
         print(supply)
-        request = input("Enter the card you wish to examine\n").lower()
-        while request not in supply:
-            request = input("Enter the card you wish to examine\n").lower()
-        send_message(request,self.connection)
-        print(read_message(self.connection))
+        request = self.choose_valid_card(supply)
+        print(self.send_and_recieve_response(request))
         send_ack(self.connection)
 
     def buy_card(self):
@@ -94,17 +111,15 @@ class PlayerClient():
         if read_ack(self.connection):
             potential_buys = read_message(self.connection)
             print(potential_buys)
-            request = input("Enter card you wish to buy\n").lower()
-            while request not in potential_buys:
-                request = input("Enter card you wish to buy\n")
-            send_message(request,self.connection)
-            print(read_message(self.connection))
-            confirmation = input("Enter yes to purchase card\n")
-            if confirmation == 'yes':
+            request = self.choose_valid_card(potential_buys)
+            print(self.send_and_recieve_response(request))
+            confirmation = self.ask_confirmation()
+            if confirmation:
                 print("Card purchased")
+                send_message('yes',self.connection)
             else:
                 print("Card not purchased")
-            send_message(confirmation,self.connection)
+                send_message('no',self.connection)
         else:
             print("Out of buys")
         send_ack(self.connection)
@@ -114,20 +129,30 @@ class PlayerClient():
         if read_ack(self.connection):
             potential_actions = read_message(self.connection)
             print(potential_actions)
-            request = input("Enter card you wish to play\n").capitalize()
-            while request not in potential_actions:
-                request = input("Enter card you wish to play\n")
-            send_message(request,self.connection)
-            print(read_message(self.connection))
-            confirmation = input("Enter yes to play card\n")
-            if confirmation == 'yes':
+            request = self.choose_valid_card(potential_actions)
+            print(self.send_and_recieve_response(request))
+            confirmation = self.ask_confirmation()
+            if confirmation:
+                send_message('yes',self.connection)
                 print("Card played")
+                self.process_commands()
             else:
+                send_message('no',self.connection)
                 print("Card not played")
-            send_message(confirmation,self.connection)
         else:
-            print("Out of actions")
+            print("Cannot play actions")
         send_ack(self.connection)
+
+    def process_commands(self):
+        while True:
+            action_code, message = read_command(self.connection)
+            if action_code == '0':
+                print(message)
+            elif action_code == '1':
+                response = input()
+                send_message(response,self.connection)
+            elif action_code == '2':
+                break
 
     def end_turn(self):
         send_message('end',self.connection)

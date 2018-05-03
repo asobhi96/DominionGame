@@ -1,9 +1,10 @@
 from random import shuffle
-from Supply import Supply
+from supply import Supply
 class Player:
-    def __init__(self,id,name,game):
+    def __init__(self,id,name,game,connection):
         self.id = id
         self.name = name
+        self.connection = connection
         self.hand = []
         self.deck = []
         self.discard = []
@@ -26,32 +27,13 @@ class Player:
             card = self.deck.pop()
             self.hand.append(card)
 
+    def shuffle_deck(self):
+        shuffle(self.deck)
+
     def repopulate_deck_form_discard(self):
-        shuffle(self.discard)
         self.deck.extend(self.discard)
         self.discard = []
-
-    def select_card_from_supply(self,card_type=None,max_cost=100):
-        card_name = input("Enter the name of the card you want to select").lower()
-        card = self.supply.create_card_from_supply(card_name)
-        while card is None or card.cost > max_cost or (card_type and card_type not in card.card_types):
-            card_name = input("Enter the name of the card you want to select").lower()
-            card = self.game.supply.create_card_from_supply(card_name)
-        return card
-
-    def select_card_from_hand(self,card_type=None,max_cost=100):
-        self.show_card_names(self.hand)
-        card_name = input("Enter the name of the card you want to select").lower()
-        card = self.find_card_from_hand(card_name) #could be simpler maybe, do a list lookup
-        while card is None or card.cost > max_cost or (card_type and card_type not in card.card_types):
-            print("Either card not found or card is not specificed type")
-            card_name = input("Enter the name of the card you want to select").lower()
-            card = self.find_card_from_hand(card_name)
-        return card
-
-    def choose_card_to_discard(self):
-        card = self.select_card_from_hand()
-        self.discard_from_hand(card)
+        self.shuffle_deck()
 
     def discard_from_hand(self,card):
         self.hand.remove(card)
@@ -65,28 +47,16 @@ class Player:
             return True
         return False
 
-    def buy_card(self):
-        if self.buys >= 1:
-            total_money = self.calculate_money()
-            print("Player has {} dollars\n".format(total_money))
-            potential_purchases = self.supply.get_potential_purchases(max_cost=total_money)
-            self.show_cards(potential_purchases)
-            card = self.select_card_from_supply(max_cost=total_money)
-            print(card)
-            confirmation = input("Enter 'yes' to purhcase this card\n")
-            if confirmation == 'yes':
-                self.buy(card)
-                return True
-            return False
-        else:
-            return False
     def buy(self,card_to_buy):
             self.buys -= 1
             self.money -= card_to_buy.cost
             self.gain_card(card_to_buy.card_name.lower())
 
-    def show_cards(self,card_list):
-        return "\n".join([card for card in card_list])
+    def show_cards(self,card_list,card_type=None,max_cost = 100):
+        return "\n".join([card for card in card_list if (not card_type or card_type in card.card_types) and card.cost <= max_cost])
+
+    def show_card_names(self,card_list):
+        return "\n".join([card.card_name for card in card_list])
 
     def show_hand(self,card_type=None,max_cost=100):
         return '\n'.join([card.card_name for card in self.hand if (not card_type or card_type in card.card_types) and card.cost <= max_cost])
@@ -97,12 +67,9 @@ class Player:
                 return card
         return None
 
-    def show_card_names(self,card_list):
-        return "\n".join([card.card_name for card in card_list])
-
     def gain_card(self,card_name):
         self.supply.decrease_stock(card_name,1)
-        new_card = self.supply.create_card_from_supply(card_name)
+        new_card = self.supply.get_card(card_name)
         self.discard.append(new_card)
 
     def prompt_reaction(self):
@@ -130,38 +97,25 @@ class Player:
         self.discard.extend(self.hand)
         self.hand = []
 
-    def choose_and_play_action(self):
-        if self.actions < 1 or not self.action_in_hand():
-            print("Cannot play actions")
-            return False
-        self.show_hand(card_type='action')
-        card = self.select_card_from_hand(card_type='action')
-        print(card)
-        confirmation = input("Enter 'yes' to buy this card\n")
-        if confirmation == 'yes':
-            self.play_card(card)
-            return True
-        return False
-
     def add_to_deck(self,card_name,quantity):
-        card = self.supply.create_card_from_supply(card_name)
+        card = self.supply.get_card(card_name)
         self.deck.extend(quantity * [card])
-
-    def shuffle_deck(self):
-        shuffle(self.deck)
 
     def trash_from_hand(self,card):
         self.hand.remove(card)
-
-    def examine_card(self):
-        card = self.select_card_from_supply()
-        print(card)
 
     def action_in_hand(self):
         for card in self.hand:
             if 'action' in card.card_types:
                 return True
         return False
+
+    def type_in_hand(self,card_type):
+        for card in self.hand:
+            if card_type in card.card_types:
+                return True
+        return False
+
     def  __str__(self):
         return """
         Player ID    :{}

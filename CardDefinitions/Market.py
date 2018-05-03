@@ -1,4 +1,6 @@
 from CardDefinitions.Card import Card
+from communication import read_message, send_input_command, send_print_command, send_end_command
+
 class Market(Card):
     def __init__(self):
         super().__init__()
@@ -16,3 +18,5 @@ class Market(Card):
         player.actions += 1
         player.buys += 1
         player.money += 1
+        send_end_command(player.connection)
+
