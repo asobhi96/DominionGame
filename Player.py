@@ -72,13 +72,6 @@ class Player:
         new_card = self.supply.get_card(card_name)
         self.discard.append(new_card)
 
-    def prompt_reaction(self):
-        for card in self.hand:
-            if 'reaction' in card.card_types:
-                prompt = input("Enter yes to react with card: {}\n".format(card.card_name))
-                if prompt == 'yes':
-                    card.react(self)
-
     def reveal(self,card_name):
         card = self.find_card_from_hand(card_name)
         if card:

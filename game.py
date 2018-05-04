@@ -2,7 +2,7 @@ import os
 import socket
 import supply
 import player
-from communication import read_message, read_ack, send_message, send_ack, send_print_command, send_end_command
+from communication import read_message, send_print_command, print_and_send_command, send_kill_command
 class GameServer():
     def __init__(self,board,number_of_players):
         self.supply = supply.Supply(configure_board=board)
@@ -38,9 +38,9 @@ class GameServer():
         self.phase = 'action'
         self.current_player = self.players[self.current_player_id]
         self.current_connection = self.current_player.connection
-        action = "start"
-        while action != "end":
-            action = self.prompt_player()
+        self.log("Player {} begins his turn\n".format(self.current_player.name))
+        while self.current_player == self.players[self.current_player_id]:
+            action = print_and_send_command(self.show_menu(),self.current_connection)
             if action == 'stats':
                 self.stats()
             elif action == 'hand':
@@ -57,72 +57,56 @@ class GameServer():
                 self.end_turn()
             elif action == 'exit':
                 self.exit_game()
-
-    def request_card(self,card_type=None,max_cost=100):
-        send_message(self.supply.get_potential_purchases(card_type=card_type,max_cost=max_cost),self.current_connection)
-        requested_card = read_message(self.current_connection)
-        return self.supply.get_card(requested_card)
-
+            else:
+                send_print_command("Invalid action",self.current_connection)
 
     def examine(self):
-        card = self.request_card()
-        send_message(str(card),self.current_connection)
-        ack = read_ack(self.current_connection)
+        card_name = print_and_send_command(self.supply.show_cards(),self.current_connection)
+        card = self.supply.get_card(card_name)
+        if card:
+            send_print_command(str(card),self.current_connection)
 
     def get_supply(self):
         supply_string = self.supply.show_supply()
-        send_message(supply_string,self.current_connection)
-        ack = read_ack(self.current_connection)
+        send_print_command(supply_string,self.current_connection)
 
     def hand(self):
-        send_message(self.current_player.show_hand(),self.current_connection)
-        ack = read_ack(self.current_connection)
+        send_print_command(self.current_player.show_hand(),self.current_connection)
 
     def stats(self):
-        send_message(str(self.current_player),self.current_connection)
-        ack = read_ack(self.current_connection)
+        send_print_command(str(self.current_player),self.current_connection)
 
     def buy_card(self):
         if self.current_player.buys < 1:
-            send_message("out of buys",self.current_connection)
+            send_print_command("out of buys",self.current_connection)
         else:
-            send_ack(self.current_connection)
-            card = self.request_card(max_cost=self.current_player.calculate_money())
-            send_message(str(card),self.current_connection)
-            confirmation = read_message(self.current_connection)
-            if confirmation == 'yes':
-                self.current_player.buy(card)
-                self.phase = 'buy'
-        ack = read_ack(self.current_connection)
+            potential_buys = self.current_player.supply.get_potential_purchases(card_type='action')
+            requested_card = print_and_send_command(potential_buys,self.current_connection).lower()
+            card = self.supply.get_card(requested_card)
+            if card and card.card_name.lower() in potential_buys:
+                send_print_command(str(card),self.current_connection)
+                confirmation = print_and_send_command("Enter yes to confirm purchase",self.current_connection)
+                if confirmation == 'yes':
+                    self.current_player.buy(card)
+                    self.phase = 'buy'
+                    self.log("Player {} bought {}\n".format(self.current_player.name,card.card_name))
 
     def play_action(self):
         if self.current_player.actions < 1 or not self.current_player.action_in_hand() or self.phase == 'buy':
-            send_message("cannot play action cards",self.current_connection)
+            send_print_command("cannot play action cards",self.current_connection)
         else:
-            send_ack(self.current_connection)
-            send_message(self.current_player.show_hand(card_type='action'),self.current_connection)
-            requested_action = read_message(self.current_connection)
-            card = self.supply.get_card(requested_action)
-            send_message(str(card),self.current_connection)
-            confirmation = read_message(self.current_connection)
-            if confirmation == 'yes':
-                self.current_player.play_card(card)
-        ack = read_ack(self.current_connection)
-
-
-    def log(self,message):
-        for player in self.players:
-            send_message("command_mode",player.connection)
-            send_print_command(message,player.connection)
-            send_end_command(player.connection)
+            playable_cards = self.current_player.show_hand(card_type='action')
+            requested_card = print_and_send_command(playable_cards,self.current_connection)
+            card = self.supply.get_card(requested_card)
+            if card and card.card_name in playable_cards:
+                send_print_command(str(card),self.current_connection)
+                confirmation = print_and_send_command("Do you want to play this card?",self.current_connection)
+                if confirmation == 'yes':
+                    self.current_player.play_card(card)
+                    self.log("Player {} played {}\n".format(self.current_player.name,card.card_name))
 
     def opponents_of(self,player):
         return [opponent for opponent in self.players if opponent != player]
-
-    def prompt_player(self):
-        print("Sending menu to {}\n".format(self.current_player.name))
-        send_message("menu",self.current_connection)
-        return read_message(self.current_connection)
 
     def main_loop(self):
         self.set_up()
@@ -137,12 +121,34 @@ class GameServer():
 
     def exit_game(self):
         for player in self.players:
+            send_kill_command(player.connection)
             player.connection.close()
         exit()
 
     def end_turn(self):
         self.current_player.clean_up()
         self.phase = 'clean_up'
+        self.log("Player {} ends their turn\n".format(self.current_player.name))
+        self.current_player_id = self.current_player_id + 1 % len(self.players)
+
+    def show_menu(self):
+        return """
+            It is your turn
+
+            Enter 'hand' to view your hand
+            Enter 'supply' to view the supply
+            Enter 'examine' to look at a card
+            Enter 'stats' to see your current stats
+            Enter 'play' to play a card
+            Enter 'buy' to purhcase a card
+            Enter 'end' to end your turn
+            Enter 'exit'to exit the game
+
+            """
+    def log(self,message):
+        print(message)
+        for player in self.players:
+            send_print_command(message,player.connection)
 
 def main():
     with open("card_config.txt",'r') as f:
