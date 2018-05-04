@@ -2,15 +2,28 @@ README
 
 This package includes:
 
-    CardDefinitions/ #Class files for each card
+    CardDefinitions/ # class files for each card
 
-    Game.py #Class file for creating game instance
+    game.py # class file for Game object, responsible for hosting game instance
 
-    Suppply.py #Class file for creating the supply of cards
+    supply.py #class for for Supply object, responsible for creating the supply of cards
 
-    main.py #main file that creates the game
+    client.py # class file for Client object, represents the players
 
-    card_config.txt #text file that holds the cards that will be used in the game
+    player.py # class file for Player object, responsible for managing players in the game instance
 
-To run game:
-    python main.py
+    communication.py # module containing methods for communicating between host and players
+
+    card_config.txt # text file that holds the cards that will be used in the game
+
+
+To run the game:
+
+For the host:
+    Host machine runs game.py. Clients will connect to it, and begin communicating with them.
+    All files except player.py are necessary to run the host.
+
+For the players:
+    Players run client.py. Players will connect to the host's ip address and begin exchanging info with hosts to play the game.
+    Note that client.py is the only file necessary.
+
