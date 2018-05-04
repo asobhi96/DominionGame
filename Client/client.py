@@ -9,7 +9,8 @@ class PlayerClient():
         send_message('Arman',self.connection)
 
     def connect_to_game_host(self):
-        self.connection.connect(('localhost',1025))
+        ip = input()
+        self.connection.connect((ip,1025))
 
     def play(self):
         self.process_commands()

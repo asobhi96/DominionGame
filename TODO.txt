@@ -2,6 +2,9 @@ TO DO
 
 Highest to lowest prio:
 
-Implement Log (host sends messages to all players). Once client is always in command mode, this will be easier
+Redownload OS Image since I kinda messed it up
+Include virtualenv
+Export player client as exe file
 Correctly implement Action, Buy, and Clean up phases. Need to implement play area list.
+Add GUI
 Add other cards
