@@ -1,4 +1,4 @@
-from communication import read_message, send_input_command, send_print_command, send_end_command
+from communication import read_message, send_input_command, send_print_command
 from CardDefinitions.Card import Card
 class Workshop(Card):
     def __init__(self):
@@ -20,5 +20,4 @@ class Workshop(Card):
                 send_print_command("Gaining a {}\n".format(card),player.connection)
                 player.gain_card(card)
                 break
-        send_end_command(player.connection)
 

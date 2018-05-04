@@ -1,5 +1,5 @@
 from CardDefinitions.Card import Card
-from communication import read_message, send_input_command, send_print_command, send_end_command
+from communication import read_message, send_input_command, send_print_command
 
 class Cellar(Card):
     def __init__(self):
@@ -31,4 +31,3 @@ class Cellar(Card):
                     break
             player.discard_from_hand(card)
         player.draw(number_to_draw=number_of_cards_to_discard)
-        send_end_command(player.connection)

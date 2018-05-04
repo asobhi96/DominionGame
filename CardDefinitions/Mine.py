@@ -1,4 +1,4 @@
-from communication import read_message, send_input_command, send_print_command, send_end_command
+from communication import read_message, send_input_command, send_print_command
 from CardDefinitions.Card import Card
 class Mine(Card):
     def __init__(self):
@@ -31,4 +31,3 @@ class Mine(Card):
                     player.gain_card(treasure.card_name.lower())
                     send_print_command("Gaining a {}\n".format(treasure_card_name),player.connection)
                     break
-        send_end_command(player.connection)
