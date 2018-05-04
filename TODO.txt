@@ -2,7 +2,6 @@ TO DO
 
 Highest to lowest prio:
 
-Fix current cards with networking
 Implement Log (host sends messages to all players)
 Correctly implement Action, Buy, and Clean up phases
 Add other cards (least prio)

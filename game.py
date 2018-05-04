@@ -2,12 +2,11 @@ import os
 import socket
 import supply
 import player
-from communication import read_message, read_ack, send_message, send_ack
+from communication import read_message, read_ack, send_message, send_ack, send_print_command, send_end_command
 class GameServer():
     def __init__(self,board,number_of_players):
         self.supply = supply.Supply(configure_board=board)
         self.server_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM) #creates a TCP socket
-        self.player_sockets = []
         self.players = []
         self.current_player = None
         self.current_player_id = 0
@@ -21,7 +20,6 @@ class GameServer():
         for i in range(self.number_of_players):
             conn,addr = self.server_socket.accept()
             print("connection found")
-            self.player_sockets.append(conn)
             new_player = player.Player(name=read_message(connection=conn),id=i,game=self,connection=conn)
             self.players.append(new_player)
 
@@ -38,7 +36,8 @@ class GameServer():
 
     def play_turn(self):
         self.phase = 'action'
-        self.current_player,self.current_connection = self.get_player_and_client()
+        self.current_player = self.players[self.current_player_id]
+        self.current_connection = self.current_player.connection
         action = "start"
         while action != "end":
             action = self.prompt_player()
@@ -111,6 +110,12 @@ class GameServer():
         ack = read_ack(self.current_connection)
 
 
+    def log(self,message):
+        for player in self.players:
+            send_message("command_mode",player.connection)
+            send_print_command(message,player.connection)
+            send_end_command(player.connection)
+
     def opponents_of(self,player):
         return [opponent for opponent in self.players if opponent != player]
 
@@ -130,12 +135,9 @@ class GameServer():
             return True
         return False
 
-    def get_player_and_client(self):
-        return self.players[self.current_player_id],self.player_sockets[self.current_player_id]
-
     def exit_game(self):
-        for socket in self.player_sockets:
-            socket.close()
+        for player in self.players:
+            player.connection.close()
         exit()
 
     def end_turn(self):

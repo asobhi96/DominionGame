@@ -2,7 +2,6 @@
 Methods to communicate between host and clients for Dominion Game
 """
 def send_message(message,connection):
-    print("sending message {}\n".format(message))
     msg_length = len(message)
     new_messsage = msg_length.to_bytes(length=2,byteorder='big') + message.encode('ascii')
     connection.sendall(new_messsage)
@@ -23,7 +22,6 @@ def send_print_command(message,connection):
     send_message('0'+ message,connection)
 
 def send_input_command(connection):
-    print("sending inpout command")
     send_message('1',connection)
 
 def send_end_command(connection):

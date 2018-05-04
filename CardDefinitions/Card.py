@@ -1,3 +1,4 @@
+from communication import send_message, send_print_command, send_input_command, send_end_command, read_message
 class Card:
     def __init__(self):
         self.card_name = None
@@ -13,10 +14,10 @@ class Card:
         else:
             return False
 
-    def play():
+    def play(self,player):
         pass
 
-    def react():
+    def react(self,player):
         pass
     def __str__(self):
         return """
