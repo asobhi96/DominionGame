@@ -2,6 +2,6 @@ TO DO
 
 Highest to lowest prio:
 
-Implement Log (host sends messages to all players)
-Correctly implement Action, Buy, and Clean up phases
-Add other cards (least prio)
+Implement Log (host sends messages to all players). Once client is always in command mode, this will be easier
+Correctly implement Action, Buy, and Clean up phases. Need to implement play area list.
+Add other cards
