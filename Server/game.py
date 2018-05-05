@@ -41,7 +41,7 @@ class GameServer():
         self.current_player = self.players[self.current_player_id]
         self.current_connection = self.current_player.connection
         self.log("Player {} begins his turn\n".format(self.current_player.name))
-        while self.current_player == self.players[self.current_player_id]:
+        while self.phase != 'clean_up':
             action = print_and_send_command(self.show_menu(self.phase),self.current_connection)
             if action == 'stats':
                 self.stats()
@@ -90,7 +90,7 @@ class GameServer():
         if self.current_player.buys < 1:
             send_print_command("out of buys",self.current_connection)
         else:
-            potential_buys = self.current_player.supply.get_potential_purchases(max_cost=self.current_player.money,card_type='action')
+            potential_buys = self.current_player.supply.get_potential_purchases(max_cost=self.current_player.money)
             requested_card = print_and_send_command(potential_buys,self.current_connection).lower()
             card = self.supply.get_card(requested_card)
             if card and card.card_name.lower() in potential_buys:
