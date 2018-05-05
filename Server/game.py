@@ -131,7 +131,7 @@ class GameServer():
         self.current_player.clean_up()
         self.phase = 'clean_up'
         self.log("Player {} ends their turn\n".format(self.current_player.name))
-        self.current_player_id = self.current_player_id + 1 % len(self.players)
+        self.current_player_id = (self.current_player_id + 1) % len(self.players)
 
     def show_menu(self):
         return """
