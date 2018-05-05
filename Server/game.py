@@ -22,7 +22,7 @@ class GameServer():
             conn,addr = self.server_socket.accept()
             print("connection found")
             new_player = player.Player(name=read_message(connection=conn),id=i,game=self,connection=conn)
-            send_print_command("Connected...waiting on other players")
+            send_print_command("Connected...waiting on other players",conn)
             self.players.append(new_player)
 
     def set_up(self):
