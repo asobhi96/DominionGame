@@ -7,3 +7,6 @@ class Copper(Card):
         self.cost = 0
         self.value = 1
         self.text = "$1"
+
+    def play(self,player):
+        player.money += 1

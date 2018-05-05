@@ -42,7 +42,7 @@ class GameServer():
         self.current_connection = self.current_player.connection
         self.log("Player {} begins his turn\n".format(self.current_player.name))
         while self.current_player == self.players[self.current_player_id]:
-            action = print_and_send_command(self.show_menu(),self.current_connection)
+            action = print_and_send_command(self.show_menu(self.phase),self.current_connection)
             if action == 'stats':
                 self.stats()
             elif action == 'hand':
@@ -52,9 +52,17 @@ class GameServer():
             elif action == 'examine':
                 self.examine()
             elif action == 'play':
-                self.play_action()
+                if self.phase == 'action':
+                    self.play_action()
+                elif self.phase == 'buy':
+                    self.play_treasure()
+            elif action == 'play all':
+                self.play_all_treasure()
             elif action == 'buy':
-                self.buy_card()
+                if self.phase == 'action':
+                    self.phase = 'buy'
+                elif self.phase == 'buy':
+                    self.buy_card()
             elif action == "end":
                 self.end_turn()
             elif action == 'exit':
@@ -82,7 +90,7 @@ class GameServer():
         if self.current_player.buys < 1:
             send_print_command("out of buys",self.current_connection)
         else:
-            potential_buys = self.current_player.supply.get_potential_purchases(card_type='action')
+            potential_buys = self.current_player.supply.get_potential_purchases(max_cost=self.current_player.money,card_type='action')
             requested_card = print_and_send_command(potential_buys,self.current_connection).lower()
             card = self.supply.get_card(requested_card)
             if card and card.card_name.lower() in potential_buys:
@@ -94,7 +102,7 @@ class GameServer():
                     self.log("Player {} bought {}\n".format(self.current_player.name,card.card_name))
 
     def play_action(self):
-        if self.current_player.actions < 1 or not self.current_player.action_in_hand() or self.phase == 'buy':
+        if self.current_player.actions < 1 or not self.current_player.type_in_hand('action') or self.phase == 'buy':
             send_print_command("cannot play action cards",self.current_connection)
         else:
             playable_cards = self.current_player.show_hand(card_type='action')
@@ -106,6 +114,31 @@ class GameServer():
                 if confirmation == 'yes':
                     self.current_player.play_card(card)
                     self.log("Player {} played {}\n".format(self.current_player.name,card.card_name))
+
+    def play_treasure(self):
+        if not self.current_player.type_in_hand('treasure'):
+            send_print_command("You have no treasure cards to play",self.current_connection)
+        else:
+            send_print_command("Select a treasure card to play and recieve coin",self.current_connection)
+            playable_cards = self.current_player.show_hand(card_type='treasure')
+            requested_card = print_and_send_command(playable_cards,self.current_connection)
+            card = self.supply.get_card(requested_card)
+            if card and card.card_name in playable_cards:
+                send_print_command("Playing {}, gaining ({}) coin(s)".format(card.card_name,card.value),self.current_connection)
+                self.current_player.play_card(card)
+                self.log("Player {} played {}\n".format(self.current_player.name,card.card_name))
+
+    def play_all_treasure(self):
+        while self.current_player.type_in_hand('treasure'):
+            for card in self.current_player.hand:
+                if 'treasure' in card.card_types:
+                    send_print_command("Playing {}, gaining ({}) coin(s)".format(card.card_name,card.value),self.current_connection)
+                    self.current_player.play_card(card)
+                    self.log("Player {} played {}\n".format(self.current_player.name,card.card_name))
+                    break
+
+
+
 
     def opponents_of(self,player):
         return [opponent for opponent in self.players if opponent != player]
@@ -133,20 +166,34 @@ class GameServer():
         self.log("Player {} ends their turn\n".format(self.current_player.name))
         self.current_player_id = (self.current_player_id + 1) % len(self.players)
 
-    def show_menu(self):
-        return """
-            It is your turn
+    def show_menu(self,phase):
+        menu = """
+        It is your turn {}
+        Enter 'hand' to view your hand
+        Enter 'supply' to view the supply
+        Enter 'examine' to look at a card
+        Enter 'stats' to see your current stats""".format(self.current_player.name)
 
-            Enter 'hand' to view your hand
-            Enter 'supply' to view the supply
-            Enter 'examine' to look at a card
-            Enter 'stats' to see your current stats
-            Enter 'play' to play a card
-            Enter 'buy' to purhcase a card
-            Enter 'end' to end your turn
-            Enter 'exit'to exit the game
+        if phase == 'action':
+            if self.current_player.actions > 0:
+                menu += """
+        Enter 'play' to play a card from your hand"""
+            menu += """
+        Enter 'buy' to enter the buy phase"""
 
-            """
+        if phase == 'buy' and self.current_player.buys > 0:
+            if self.current_player.buys > 0:
+                menu += """
+        Enter 'buy' to purhcase a card"""
+            menu += """
+        Enter 'play all' to play all treasure cards from your hand
+        Enter 'play' to play 1 treasure card from your hand"""
+
+        menu += """
+        Enter 'end' to end your turn
+        Enter 'exit'to exit the game"""
+        return menu
+
     def log(self,message):
         print(message)
         for player in self.players:

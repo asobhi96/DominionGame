@@ -7,3 +7,6 @@ class Gold(Card):
         self.cost = 6
         self.value = 3
         self.text = "$3"
+
+    def play(self,player):
+        player.money += 3

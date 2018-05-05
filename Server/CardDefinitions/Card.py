@@ -8,7 +8,7 @@ class Card:
         self.victory_points = 0
 
     def is_playable(self):
-        if 'action' in self.card_types:
+        if 'action' in self.card_types or 'treasure' in self.card_types:
             return True
         else:
             return False

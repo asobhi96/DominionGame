@@ -8,6 +8,7 @@ class Player:
         self.hand = []
         self.deck = []
         self.discard = []
+        self.play_area = []
         self.money = 0
         self.victory_points = 0
         self.actions = 1
@@ -18,7 +19,7 @@ class Player:
         self.next_hand_size = 5
 
     def calculate_money(self):
-        return self.money + sum([card.value for card in self.hand])
+        return self.money
 
     def draw(self,number_to_draw=1):
         for card_to_draw in range(number_to_draw):
@@ -32,17 +33,22 @@ class Player:
 
     def repopulate_deck_form_discard(self):
         self.deck.extend(self.discard)
-        self.discard = []
+        self.discard.clear()
         self.shuffle_deck()
 
     def discard_from_hand(self,card):
         self.hand.remove(card)
         self.discard.append(card)
 
+    def move_card_to_play_area(self,card):
+        self.hand.remove(card)
+        self.play_area.append(card)
+
     def play_card(self,card):
         if card.is_playable():
-            self.actions -= 1
-            self.discard_from_hand(card)
+            if 'action' in card.card_types:
+                self.actions -= 1
+            self.move_card_to_play_area(card)
             card.play(self)
             return True
         return False
@@ -78,6 +84,7 @@ class Player:
             return "{} reveals {}\n".format(self.name,card.card_name)
 
     def clean_up(self):
+        self.discard_entire_play_area()
         self.discard_entire_hand()
         self.draw(number_to_draw=self.next_hand_size)
         self.buys = 1
@@ -88,7 +95,11 @@ class Player:
 
     def discard_entire_hand(self):
         self.discard.extend(self.hand)
-        self.hand = []
+        self.hand .clear()
+
+    def discard_entire_play_area(self):
+        self.discard.extend(self.play_area)
+        self.play_area.clear()
 
     def add_to_deck(self,card_name,quantity):
         card = self.supply.get_card(card_name)
@@ -96,12 +107,6 @@ class Player:
 
     def trash_from_hand(self,card):
         self.hand.remove(card)
-
-    def action_in_hand(self):
-        for card in self.hand:
-            if 'action' in card.card_types:
-                return True
-        return False
 
     def type_in_hand(self,card_type):
         for card in self.hand:
@@ -115,4 +120,4 @@ class Player:
         Money        :{}
         Actions      :{}
         Buys         :{}
-        """.format(self.id,self.calculate_money(),self.actions,self.buys)
+        """.format(self.id,self.money,self.actions,self.buys)
