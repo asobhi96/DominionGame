@@ -29,7 +29,7 @@ class PlayerClient():
 
 def main():
     name = input("Enter your name\n")
-    player = PlayerClient(name=player)
+    player = PlayerClient(name=name)
     player.play()
 
 if __name__ == "__main__":
