@@ -3,13 +3,13 @@ import socket
 from communication import send_message, read_message, read_command
 
 class PlayerClient():
-    def __init__(self):
+    def __init__(self,name):
         self.connection = socket.socket(socket.AF_INET,socket.SOCK_STREAM) #creates a TCP socket
         self.connect_to_game_host()
-        send_message('Arman',self.connection)
+        send_message(name,self.connection)
 
     def connect_to_game_host(self):
-        ip = input()
+        ip = input("Enter IP you wish to connect to")
         self.connection.connect((ip,1025))
 
     def play(self):
@@ -28,7 +28,8 @@ class PlayerClient():
                 break
 
 def main():
-    player = PlayerClient()
+    name = input("Enter your name\n")
+    player = PlayerClient(name=player)
     player.play()
 
 if __name__ == "__main__":

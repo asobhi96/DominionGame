@@ -15,6 +15,7 @@ class GameServer():
         self.phase = None
 
     def connect_to_players(self):
+        print("Waiting for player")
         self.server_socket.bind(("0.0.0.0",1025))
         self.server_socket.listen(self.number_of_players)
         for i in range(self.number_of_players):
@@ -157,7 +158,8 @@ def main():
         for card in f:
             name,supply = card.strip().split(',')
             configure.append(tuple([name,int(supply)]))
-        game = GameServer(board=configure,number_of_players=1)
+        number_of_players = int(input("Enter # of players\n"))
+        game = GameServer(board=configure,number_of_players=number_of_players)
         game.main_loop()
 
 if __name__ == "__main__":
