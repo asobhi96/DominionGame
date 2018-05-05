@@ -1,5 +1,5 @@
 from CardDefinitions.Card import Card
-from communication import read_message, send_input_command, send_print_command
+from communication import  send_print_command, print_and_send_command
 
 class Cellar(Card):
     def __init__(self):
@@ -14,18 +14,15 @@ class Cellar(Card):
     def play(self,player):
         player.actions += 1
         while True:
-            send_print_command("How many cards do you wish to discard?",player.connection)
-            send_input_command(player.connection)
-            number_of_cards_to_discard =  read_message(player.connection)
+            send_print_command(player.show_hand(),player.connection)
+            number_of_cards_to_discard =  print_and_send_command("How many cards do you wish to discard?",player.connection)
             if number_of_cards_to_discard.isdigit() and int(number_of_cards_to_discard) >= 0 and int(number_of_cards_to_discard) <= len(player.hand):
                 number_of_cards_to_discard = int(number_of_cards_to_discard)
                 break
         for _ in range(number_of_cards_to_discard):
             while True:
                 send_print_command(player.show_hand(),player.connection)
-                send_print_command("Enter name of card you wish to discard",player.connection)
-                send_input_command(player.connection)
-                card_name = read_message(player.connection)
+                card_name = print_and_send_command("Enter name of card you wish to discard",player.connection)
                 card = player.find_card_from_hand(card_name)
                 if card:
                     break

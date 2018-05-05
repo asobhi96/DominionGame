@@ -1,4 +1,4 @@
-from communication import read_message, send_input_command, send_print_command
+from communication import send_print_command,print_and_send_command
 from CardDefinitions.Card import Card
 class Mine(Card):
     def __init__(self):
@@ -13,9 +13,7 @@ class Mine(Card):
         if player.type_in_hand('treasure'):
             while True:
                 send_print_command(player.show_hand(card_type='treasure'),player.connection)
-                send_print_command("Choose a treasure card to trash",player.connection)
-                send_input_command(player.connection)
-                treasure_card_name = read_message(player.connection).lower()
+                treasure_card_name = print_and_send_command("Choose a treasure card to trash",player.connection).lower()
                 treasure = player.find_card_from_hand(treasure_card_name)
                 if treasure:
                     break
@@ -24,9 +22,7 @@ class Mine(Card):
             while True:
                 send_print_command("Choose a treasure card to gain up to +3 trashed card cost",player.connection)
                 potential_buys = player.supply.get_potential_purchases(card_type='treasure',max_cost=original_cost+3)
-                send_print_command(potential_buys,player.connection)
-                send_input_command(player.connection)
-                treasure_card_name = read_message(player.connection).lower()
+                treasure_card_name = print_and_send_command(potential_buys,player.connection).lower()
                 if treasure_card_name in potential_buys:
                     player.gain_card(treasure.card_name.lower())
                     send_print_command("Gaining a {}\n".format(treasure_card_name),player.connection)

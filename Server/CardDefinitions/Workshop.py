@@ -1,4 +1,4 @@
-from communication import read_message, send_input_command, send_print_command
+from communication import send_print_command, print_and_send_command
 from CardDefinitions.Card import Card
 class Workshop(Card):
     def __init__(self):
@@ -13,9 +13,7 @@ class Workshop(Card):
         potential_buys = player.supply.get_potential_purchases(max_cost=4)
         while True:
             send_print_command(potential_buys,player.connection)
-            send_print_command("Enter a card to gain up to $4",player.connection)
-            send_input_command(player.connection)
-            card = read_message(player.connection).lower()
+            card = print_and_send_command("Enter a card to gain up to $4",player.connection).lower()
             if card in potential_buys:
                 send_print_command("Gaining a {}\n".format(card),player.connection)
                 player.gain_card(card)
